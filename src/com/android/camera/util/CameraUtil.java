@@ -127,6 +127,10 @@ public class CameraUtil {
 
     private static String[] sASDModes;
 
+    private static boolean sEnableHDRWithZSL;
+
+    private static boolean sEnableHistogram;
+
     // Fields for the show-on-maps-functionality
     private static final String MAPS_PACKAGE_NAME = "com.google.android.apps.maps";
     private static final String MAPS_CLASS_NAME = "com.google.android.maps.MapsActivity";
@@ -229,6 +233,8 @@ public class CameraUtil {
         sSamsungHDRFormat = context.getResources().getBoolean(R.bool.needsSamsungHDRFormat);
         sSamsungCamMode = context.getResources().getBoolean(R.bool.needsSamsungCamMode);
         sASDModes = context.getResources().getStringArray(R.array.asdModes);
+        sEnableHDRWithZSL = context.getResources().getBoolean(R.bool.enableHDRWithZSL);
+        sEnableHistogram = context.getResources().getBoolean(R.bool.enableHistogram);
     }
 
     public static int dpToPixel(int dp) {
@@ -245,6 +251,14 @@ public class CameraUtil {
 
     public static boolean useSamsungCamMode() {
         return sSamsungCamMode;
+    }
+
+    public static boolean isHDRWithZSLEnabled() {
+        return sEnableHDRWithZSL;
+    }
+
+    public static boolean isHistogramEnabled() {
+        return sEnableHistogram;
     }
 
     // Rotates the bitmap by the specified degree.
