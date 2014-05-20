@@ -953,9 +953,6 @@ public class CameraSettings {
         if (CameraUtil.useSamsungCamMode()) {
             params.set("cam_mode", on ? "1" : "0");
         }
-        if (CameraUtil.useHTCCamMode()) {
-            params.set("cam-mode", on ? "1" : "0");
-        }
     }
 
     public static List<String> getSupportedSlowShutter(Parameters params) {
