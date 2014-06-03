@@ -60,6 +60,7 @@ public class FocusOverlayManager {
     private static final String TAG = "CAM_FocusManager";
 
     private static final int RESET_TOUCH_FOCUS = 0;
+    private static final int RESET_TOUCH_FOCUS_DELAY = 3000;
 
     private int mState = STATE_IDLE;
     public static final int STATE_IDLE = 0; // Focus is not active.
@@ -144,7 +145,6 @@ public class FocusOverlayManager {
         setParameters(parameters);
         mListener = listener;
         setMirror(mirror);
-        mFocusDefault = true;
         mUI = ui;
     }
 
@@ -299,8 +299,9 @@ public class FocusOverlayManager {
             updateFocusUI();
             // If this is triggered by touch focus, cancel focus after a
             // while.
-            if ((!mFocusDefault) && (mFocusTime != 0)) {
-                mHandler.sendEmptyMessageDelayed(RESET_TOUCH_FOCUS, mFocusTime);
+
+            if (mFocusArea != null) {
+                mHandler.sendEmptyMessageDelayed(RESET_TOUCH_FOCUS, RESET_TOUCH_FOCUS_DELAY);
             }
             if (shutterButtonPressed) {
                 // Lock AE & AWB so users can half-press shutter and recompose.
@@ -376,12 +377,12 @@ public class FocusOverlayManager {
                 UsageStatistics.ACTION_TOUCH_FOCUS, x + "," + y);
 
         // Let users be able to cancel previous touch focus.
-        if ((!mFocusDefault) && (mState == STATE_FOCUSING ||
+        if ((mFocusArea != null) && (mState == STATE_FOCUSING ||
                     mState == STATE_SUCCESS || mState == STATE_FAIL)) {
             cancelAutoFocus();
         }
         if (mPreviewRect.width() == 0 || mPreviewRect.height() == 0) return;
-        mFocusDefault = false;
+        // Initialize variables.
         // Initialize mFocusArea.
         if (mFocusAreaSupported) {
             initializeFocusAreas(x, y);
@@ -462,14 +463,13 @@ public class FocusOverlayManager {
         if (mParameters == null) return Parameters.FOCUS_MODE_AUTO;
         List<String> supportedFocusModes = mParameters.getSupportedFocusModes();
 
-        if (mFocusAreaSupported && !mFocusDefault
-                 && !CameraUtil.noFocusModeChangeForTouch()) {
-            // Always use autofocus in tap-to-focus.
-            mFocusMode = Parameters.FOCUS_MODE_AUTO;
-        } else {
-            // The default is continuous autofocus.
-            mFocusMode = mPreferences.getString(
-                    CameraSettings.KEY_FOCUS_MODE, null);
+	if (mFocusAreaSupported && mFocusArea != null) {
+		// Always use autofocus in tap-to-focus.
+		mFocusMode = Parameters.FOCUS_MODE_AUTO;
+	} else {
+		// The default is continuous autofocus.
+		mFocusMode = mPreferences.getString(
+			CameraSettings.KEY_FOCUS_MODE, null);
 
             // Try to find a supported focus mode from the default list.
             if (mFocusMode == null) {
@@ -508,7 +508,7 @@ public class FocusOverlayManager {
         // Show only focus indicator or face indicator.
 
         if (mState == STATE_IDLE) {
-            if (mFocusDefault) {
+            if (mFocusArea == null) {
                 mUI.clearFocus();
             } else {
                 // Users touch on the preview and the indicator represents the
@@ -548,15 +548,6 @@ public class FocusOverlayManager {
         mFocusArea = null;
         // Initialize mMeteringArea.
         mMeteringArea = null;
-
-        if (mFocusAreaSupported) {
-            initializeFocusAreas(mPreviewRect.centerX(), mPreviewRect.centerY());
-        }
-        // Reset metering area when no specific region is selected.
-        if (mMeteringAreaSupported) {
-            resetMeteringAreas();
-        }
-        mFocusDefault = true;
     }
 
     private void calculateTapArea(int x, int y, float areaMultiple, Rect rect) {
